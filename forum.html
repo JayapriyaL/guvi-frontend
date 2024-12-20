@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discussion Forum</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .post-form input, .post-form textarea {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .post-form button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .post-form button:hover {
+            background-color: #0056b3;
+        }
+        .post {
+            border-bottom: 1px solid #ddd;
+            padding: 15px 0;
+        }
+        .post:last-child {
+            border-bottom: none;
+        }
+        .post .title {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        .post .content {
+            margin: 10px 0;
+        }
+        .post .actions button {
+            margin-right: 10px;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .post .actions .like {
+            background-color: #28a745;
+            color: #fff;
+        }
+        .post .actions .dislike {
+            background-color: #dc3545;
+            color: #fff;
+        }
+        .post .actions .reply {
+            background-color: #ffc107;
+            color: #fff;
+        }
+        .post .replies {
+            margin-left: 20px;
+            padding-left: 10px;
+            border-left: 2px solid #ddd;
+        }
+        .search-bar {
+            margin-bottom: 20px;
+        }
+        .search-bar input {
+            width: calc(100% - 30px);
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Discussion Forum</h1>
+        </div>
+        <div class="search-bar">
+            <input type="text" id="search" placeholder="Search topics...">
+        </div>
+        <div class="post-form">
+            <input type="text" id="postTitle" placeholder="Post Title">
+            <textarea id="postContent" placeholder="Write your post..."></textarea>
+            <button onclick="addPost()">Post</button>
+        </div>
+        <div id="posts"></div>
+    </div>
+
+    <script>
+        let posts = [];
+
+        function addPost() {
+            const title = document.getElementById('postTitle').value;
+            const content = document.getElementById('postContent').value;
+
+            if (title && content) {
+                posts.push({
+                    id: Date.now(),
+                    title,
+                    content,
+                    likes: 0,
+                    dislikes: 0,
+                    replies: []
+                });
+                renderPosts();
+                document.getElementById('postTitle').value = '';
+                document.getElementById('postContent').value = '';
+            } else {
+                alert('Please fill in all fields.');
+            }
+        }
+
+        function renderPosts() {
+            const postsContainer = document.getElementById('posts');
+            postsContainer.innerHTML = '';
+
+            posts.forEach(post => {
+                const postElement = document.createElement('div');
+                postElement.className = 'post';
+                postElement.innerHTML = `
+                    <div class="title">${post.title}</div>
+                    <div class="content">${post.content}</div>
+                    <div class="actions">
+                        <button class="like" onclick="likePost(${post.id})">Like (${post.likes})</button>
+                        <button class="dislike" onclick="dislikePost(${post.id})">Dislike (${post.dislikes})</button>
+                        <button class="reply" onclick="showReplyForm(${post.id})">Reply</button>
+                    </div>
+                    <div class="replies" id="replies-${post.id}"></div>
+                `;
+                postsContainer.appendChild(postElement);
+            });
+        }
+
+        function likePost(postId) {
+            const post = posts.find(p => p.id === postId);
+            post.likes++;
+            renderPosts();
+        }
+
+        function dislikePost(postId) {
+            const post = posts.find(p => p.id === postId);
+            post.dislikes++;
+            renderPosts();
+        }
+
+        function showReplyForm(postId) {
+            const repliesContainer = document.getElementById(`replies-${postId}`);
+            const replyForm = document.createElement('div');
+            replyForm.innerHTML = `
+                <textarea id="replyContent-${postId}" placeholder="Write your reply..."></textarea>
+                <button onclick="addReply(${postId})">Reply</button>
+            `;
+            repliesContainer.appendChild(replyForm);
+        }
+
+        function addReply(postId) {
+            const replyContent = document.getElementById(`replyContent-${postId}`).value;
+            if (replyContent) {
+                const post = posts.find(p => p.id === postId);
+                post.replies.push(replyContent);
+                renderPosts();
+            } else {
+                alert('Reply cannot be empty.');
+            }
+        }
+
+        document.getElementById('search').addEventListener('input', function () {
+            const query = this.value.toLowerCase();
+            const filteredPosts = posts.filter(post =>
+                post.title.toLowerCase().includes(query) ||
+                post.content.toLowerCase().includes(query)
+            );
+
+            renderFilteredPosts(filteredPosts);
+        });
+
+        function renderFilteredPosts(filteredPosts) {
+            const postsContainer = document.getElementById('posts');
+            postsContainer.innerHTML = '';
+
+            filteredPosts.forEach(post => {
+                const postElement = document.createElement('div');
+                postElement.className = 'post';
+                postElement.innerHTML = `
+                    <div class="title">${post.title}</div>
+                    <div class="content">${post.content}</div>
+                    <div class="actions">
+                        <button class="like" onclick="likePost(${post.id})">Like (${post.likes})</button>
+                        <button class="dislike" onclick="dislikePost(${post.id})">Dislike (${post.dislikes})</button>
+                        <button class="reply" onclick="showReplyForm(${post.id})">Reply</button>
+                    </div>
+                    <div class="replies" id="replies-${post.id}"></div>
+                `;
+                postsContainer.appendChild(postElement);
+            });
+        }
+    </script>
+</body>
+</html>
